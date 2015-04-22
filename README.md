@@ -5,6 +5,9 @@ This application is designed to be a lightweight customizable scoring server for
 exercises typical in security/hacking competitions.  It consists of a single python script (flags.py), a sqlite db,
 some static html, css, etc... and a configuration file that specifies which flags are available.
 
+This project was thrown together for a specific need and seemed useful enough to warrant sharing.  If you have ideas to improve
+on it please submit feedback or even fork, implement and submit a pull request.  Thanks!
+
 ## Dependencies
 The Open Flag Server has been tested on Python 2.7.9 and requires the following Python modules:
    * cherrypy
