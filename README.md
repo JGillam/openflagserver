@@ -17,6 +17,9 @@ The Open Flag Server has been tested on Python 2.7.9 and requires the following 
    * json
    * datetime
    
+## Other Included Stuff
+Open Flag Server uses JQuery and Bootstrap, both of which are included to simplify setup.
+   
 ## More Details
 
 ### The Database
