@@ -12,8 +12,8 @@ on it please submit feedback or even fork, implement and submit a pull request. 
 The Open Flag Server has been tested on Python 2.7.9 and requires the following Python modules:
    * cherrypy
    * argparse
-   * sqlite3
-   * hashlib
+   * db-sqlite3
+   * hashlib (requires Python developer libs)
    * json
    * datetime
    
