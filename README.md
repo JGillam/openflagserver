@@ -9,7 +9,7 @@ This project was thrown together for a specific need and seemed useful enough to
 on it please submit feedback or even fork, implement and submit a pull request.  Thanks!
 
 ## Dependencies
-The Open Flag Server has been tested on Python 2.7.9 and requires the following Python modules:
+The Open Flag Server has been tested on Python 3 and requires the following Python modules:
    * cherrypy
    * argparse
    * db-sqlite3

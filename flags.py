@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # ###############################
 # Open Flag Server: flags.py
@@ -52,7 +52,7 @@ def error_page_404(status, message, traceback, version):
 
 def init_db():
     if os.path.isfile(dbfile):
-        print 'Using existing db file.  To start fresh, remove %s.' % dbfile
+        print('Using existing db file.  To start fresh, remove %s.' % dbfile)
     else:
         conn = sqlite3.connect(dbfile)
         c = conn.cursor()
@@ -64,7 +64,7 @@ def init_db():
 
 
 def init_flags(flagfile):
-    print "Loading flag config from: %s" % flagfile
+    print("Loading flag config from: %s" % flagfile)
     f = open(flagfile)
     flagconfig = json.load(f)
     f.close()
@@ -72,12 +72,12 @@ def init_flags(flagfile):
         flaginfo = {"id": flag["id"], "value": flag["value"]}
         hashes[flag["hash"]] = flaginfo
         flagids[flag["id"]] = flag["hash"]
-    print "%i flags loaded." % len(flagids)
+    print("%i flags loaded." % len(flagids))
     if "help" in flagconfig:
         special_files["help"] = flagconfig["help"]
     else:
-        special_files["help"] = "example-help.html";
-    print "Help file assigned to: %s" % special_files["help"]
+        special_files["help"] = "example-help.html"
+    print("Help file assigned to: %s" % special_files["help"])
 
 
 def update_leaders():
@@ -98,12 +98,15 @@ def update_leaders():
 
     scoreboard = []
     for handle in unsortedleaders:
-        scoreboard.append((handle, unsortedleaders[handle]['flags'], unsortedleaders[handle]['score']))
-        scoreboard = sorted(scoreboard, key=lambda score: score[2], reverse=True)
+        scoreboard.append((handle, unsortedleaders[handle]['flags'],
+                           unsortedleaders[handle]['score']))
+        scoreboard = sorted(scoreboard, key=lambda score: score[2],
+                            reverse=True)
 
     del leaders[:]
     for score in scoreboard:
-        leaders.append({'handle': score[0], 'flags': score[1], 'score': score[2]})
+        leaders.append({'handle': score[0], 'flags': score[1],
+                        'score': score[2]})
 
 
 class FlagServer(object):
@@ -115,64 +118,70 @@ class FlagServer(object):
             if handle != '' and password != '':
                 conn = sqlite3.connect(dbfile)
                 c = conn.cursor()
-                c.execute('SELECT handle FROM users where handle = ? and passwdhash = ?',
-                          (handle, hashlib.sha256(handle + password).hexdigest()))
+                c.execute('SELECT handle FROM users ' +
+                          'where handle = ? and passwdhash = ?',
+                          (handle, hashlib.sha256(bytes(handle + password,
+                                                        "utf8")).hexdigest()))
                 if len(c.fetchall()) == 1:
-                    print 'Successful login: %s' % handle
+                    print('Successful login: %s' % handle)
                     cherrypy.session['handle'] = handle
                     conn.commit()
                     conn.close()
-                    return file('main.html')
+                    return open('main.html')
                 else:
-                    print 'Failed login: %s' % handle
+                    print('Failed login: %s' % handle)
                     conn.commit()
                     conn.close()
                     return 'Login failed.  <a href="/login">Try again</a>'
             else:
-                return file('main.html')
+                return open('main.html')
         else:
-            return file('main.html')
+            return open('main.html')
 
     @cherrypy.expose
     def login(self):
-        if 'handle' not in cherrypy.session or cherrypy.session['handle'] == '':
-            return file('login.html')
+        if 'handle' not in cherrypy.session or \
+           cherrypy.session['handle'] == '':
+
+            return open('login.html')
         else:
-            return file('main.html')
+            return open('main.html')
 
     @cherrypy.expose
     def logout(self):
         cherrypy.lib.sessions.expire()
-        return file('main.html')
+        return open('main.html')
 
     @cherrypy.expose
     def help(self):
-        return file(special_files["help"])
+        return open(special_files["help"])
 
     @cherrypy.expose
     def register(self, handle='', password='', password2=''):
-        print 'Registration request for %s received: ' % handle
+        print('Registration request for %s received: ' % handle)
         if handle == '' or password == '':
-            return file('register.html')
+            return open('register.html')
         elif password != password2:
-            return 'Passwords do not match.  <a href="/register">Try again</a>.'
+            return 'Passwords do not match. <a href="/register">Try again</a>.'
         else:
             conn = sqlite3.connect(dbfile)
             c = conn.cursor()
             c.execute('SELECT * FROM users WHERE handle = ?', (handle,))
             if not handleregex.match(handle):
-                return 'Error: Handle / Name can only be 3-24 alpha-numeric characters. ' \
-                       '<a href="/register">Try another</a>.'
+                return 'Error: Handle / Name can only be 3-24 alpha-numeric' \
+                    'characters. <a href="/register">Try another</a>.'
             elif len(c.fetchall()) == 0:
-                newuser = (handle, hashlib.sha256(handle + password).hexdigest())
+                newuser = (handle, hashlib.sha256(bytes(handle + password,
+                                                        "utf8")).hexdigest())
                 c.execute('INSERT INTO users VALUES(?, ?)', newuser)
                 conn.commit()
                 conn.close()
-                return file('login.html')
+                return open('login.html')
             else:
                 conn.commit()
                 conn.close()
-                return 'That handle is already taken.  <a href="/register">Try another</a>.'
+                return 'That handle is already taken. ' \
+                    ' <a href="/register">Try another</a>.'
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -191,11 +200,14 @@ class FlagServer(object):
             c.execute('SELECT * FROM flags where handle = ? and flagid = ?',
                       (cherrypy.session['handle'], hashes[flag]['id']))
             if len(c.fetchall()) == 0:
-                newflag = (cherrypy.session['handle'], hashes[flag]['id'], datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                newflag = (cherrypy.session['handle'],
+                           hashes[flag]['id'],
+                           datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 c.execute('INSERT INTO flags VALUES(?, ?, ?)', newflag)
                 conn.commit()
                 conn.close()
-                print "*** Flag found by " + cherrypy.session['handle'] + ": " + hashes[flag]['id']
+                print("*** Flag found by " + cherrypy.session['handle'] +
+                      ": " + hashes[flag]['id'])
                 update_leaders()
                 return hashes[flag]
             else:
@@ -211,7 +223,8 @@ class FlagServer(object):
         if 'handle' in cherrypy.session:
             conn = sqlite3.connect(dbfile)
             c = conn.cursor()
-            c.execute('SELECT * FROM flags where handle = ?', (cherrypy.session['handle'],))
+            c.execute('SELECT * FROM flags where handle = ?',
+                      (cherrypy.session['handle'],))
             rows = c.fetchall()
             data = []
             for row in rows:
@@ -223,7 +236,6 @@ class FlagServer(object):
         else:
             return []
 
-
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def listleaders(self):
@@ -231,14 +243,19 @@ class FlagServer(object):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Runs a simple scoring server for submitting flags in a CTF "
-                                                 "(capture the flag)")
-    parser.add_argument('-p', '--port', default='8080', help='The listening port for the flag server.')
-    parser.add_argument('flags', help='The flag configuration file.  See example.flags for example.')
+    parser = argparse.ArgumentParser(
+        description="Runs a simple scoring server for submitting " +
+        "flags in a CTF (capture the flag)")
+    parser.add_argument('-p', '--port', default='8080',
+                        help='The listening port for the flag server.')
+    parser.add_argument('flags',
+                        help='The flag configuration file. ' +
+                        'See example.flags for example.')
     args = parser.parse_args()
     init_flags(args.flags)
 
-    cherrypy.tools.secureheaders = cherrypy.Tool('before_finalize', secureheaders, priority=60)
+    cherrypy.tools.secureheaders = cherrypy.Tool('before_finalize',
+                                                 secureheaders, priority=60)
     app_path = os.path.abspath(os.getcwd())
     conf = {
         '/': {
