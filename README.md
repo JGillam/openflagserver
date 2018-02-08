@@ -44,3 +44,15 @@ In addition to the flag list, the configuration also includes the following:
 The Open Flag Server is designed to minimize the likelihood of many common web vulnerabilities.  For example all db
 queries are parameterized and any values submitted are strictly validated before use.  This does not guarantee that
 the system has no vulnerabilities, only that an effort was made to mitigate them.
+
+### Docker container
+
+The Open Flag Server can be run from within a docker container.
+
+    $ docker build -t openflagserver .
+	
+To start the container you have to provide a path to the participants
+DB-file and the flags file via a docker volume.
+
+    $ docker run -d -p 8080:8080 -v /path/to/participants.db:/ofs/participants.db -v /path/to/the.flags:/ofs/the.flags openflagserver
+	
